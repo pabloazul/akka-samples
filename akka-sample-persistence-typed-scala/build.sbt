@@ -1,4 +1,4 @@
-organization := "com.typesafe.akka.samples"
+organization := "com.lightbend.akka.samples"
 
 val akkaVersion = "2.6.0-M1"
 

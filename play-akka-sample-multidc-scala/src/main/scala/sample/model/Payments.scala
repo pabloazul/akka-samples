@@ -1,6 +1,8 @@
 package sample.model
 
-  object PaymentLifecycle {
+import play.api.libs.json.Json
+
+object PaymentLifecycle {
     type IdempotentIdentifier = String
 
     sealed trait Correlated {
@@ -61,4 +63,12 @@ package sample.model
     case class ChargebackSuccessful(id: IdempotentIdentifier, balance: Chargedback) extends Successful[Chargedback]
     case class ChargebackFailed    (id: IdempotentIdentifier, message: String) extends Failed[Chargeback]
     case class ChargebackTimeout   (id: IdempotentIdentifier, message: String) extends Timedout[Chargeback]
-  }
+
+    implicit val authorizeReads = Json.reads[Authorize]
+    implicit val settleReads = Json.reads[Settle]
+    implicit val refundReads = Json.reads[Refund]
+    implicit val chargebackReads = Json.reads[Chargeback]
+    implicit val commandReads =  Json.reads[Command]
+
+
+}

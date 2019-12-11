@@ -1,0 +1,32 @@
+package sample.model.protobuf;
+
+option java_package = "sample.model.protobuf";
+option optimize_for = SPEED;
+
+// state
+
+message Event {
+  required string id = 1;
+}
+message State {
+  repeated Event history = 1;
+}
+
+// commands
+
+message Authorize {
+  required string id = 1;
+  required int32 amount = 2;
+}
+message Settle {
+  required string id = 1;
+  required int32 amount = 2;
+}
+message Refund {
+  required string id = 1;
+  required int32 amount = 2;
+}
+message Chargeback{
+  required string id = 1;
+  required int32 amount = 2;
+}

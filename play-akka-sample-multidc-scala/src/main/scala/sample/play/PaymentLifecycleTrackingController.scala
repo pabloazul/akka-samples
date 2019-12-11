@@ -3,10 +3,10 @@ package sample.play
 import akka.actor.Scheduler
 import akka.util.Timeout
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json._
+
 import play.api.mvc._
-import play.mvc.Http.HeaderNames
-import sample.model.PaymentLifecycle._
+import sample.model.PaymentLifecycle.{Authorize, Settle, Refund, Chargeback }
+import sample.model.PaymentLifecycleJson._
 
 import scala.concurrent.{ExecutionContext, Future}
 

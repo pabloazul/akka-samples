@@ -34,9 +34,9 @@ object PaymentLifecycle {
 
     case class State(history: List[Event])
 
-    sealed trait Requested[T <: Command]  extends Event           { def command: T ; val id = command.id }
+    sealed trait Requested[T <: Command]  extends Event { def command: T ; val id = command.id }
     sealed trait Successful[T <: Balance] extends Event { def balance: T ; val id = balance.id }
-    sealed trait Failed                   extends Event     { def message: String}
+    sealed trait Failed                   extends Event { def message: String}
     sealed trait Timedout                 extends Failed
 
     case class AuthorizationRequested (command: Authorize) extends Requested[Authorize]
@@ -58,12 +58,5 @@ object PaymentLifecycle {
     case class ChargebackSuccessful(balance: Chargedback) extends Successful[Chargedback]
     case class ChargebackFailed    (id: IdempotentIdentifier, message: String) extends Failed
     case class ChargebackTimeout   (id: IdempotentIdentifier, message: String) extends Timedout
-
-    implicit val authorizeReads = Json.reads[Authorize]
-    implicit val settleReads = Json.reads[Settle]
-    implicit val refundReads = Json.reads[Refund]
-    implicit val chargebackReads = Json.reads[Chargeback]
-    implicit val commandReads =  Json.reads[Command]
-
 
 }

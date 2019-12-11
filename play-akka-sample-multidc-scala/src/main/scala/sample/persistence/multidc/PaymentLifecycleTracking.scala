@@ -4,8 +4,7 @@ import akka.actor.ActorSystem
 import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings, ShardRegion}
 import akka.persistence.multidc.{PersistenceMultiDcSettings, SpeculativeReplicatedEvent}
 import akka.persistence.multidc.scaladsl.ReplicatedEntity
-import sample.model.PaymentLifecycle.{Command, Correlated, Event, State}
-
+import sample.model.PaymentLifecycle.{Command, Event, State}
 
 object PaymentLifecycleTracking {
 
@@ -25,7 +24,6 @@ object PaymentLifecycleTracking {
     case ShardRegion.StartEntity(entityId) => shardId(entityId)
   }
 
-
   def props(system:ActorSystem) = ReplicatedEntity.clusterShardingProps(
     entityTypeName = shardingName,
     entityFactory = () => new PaymentLifecycleTracking,
@@ -34,7 +32,6 @@ object PaymentLifecycleTracking {
   def region(system:ActorSystem) =
     ClusterSharding(system).start(shardingName, props(system), ClusterShardingSettings(system),
       extractEntityId, extractShardId)
-
 }
 
 class PaymentLifecycleTracking
@@ -46,17 +43,34 @@ class PaymentLifecycleTracking
 
   override def commandHandler: CommandHandler = CommandHandler { (ctx, state, command) =>
     command match {
-            case authorize:Authorize   => Effect.persist(AuthorizationRequested(authorize))
-            case settle:Settle         => Effect.persist(SettlementRequested(settle))
-            case refund:Refund         => Effect.persist(RefundRequested(refund))
-            case chargeback:Chargeback => Effect.persist(ChargebackRequested(chargeback))
+      case setBalanceCommand: SetBalance => Effect.persist(Requested(setBalanceCommand))
+      case getBalanceCommand: GetBalance => getBalanceCommand match {
+        case g:GetAuthorizationBalance =>
+          val balance = state.history.flatMap(isBalance[Authorization](_))
+          Effect.none
+        case g:GetSettledBalance =>
+          val balance = state.history.flatMap(isBalance[Settlement](_))
+          Effect.none
+        case g:GetRefundedBalance =>
+          val balance = state.history.flatMap(isBalance[Refunded](_))
+          Effect.none
+        case g:GetChargebackBalance =>
+          val balance = state.history.flatMap(isBalance[Chargedback](_))
+          Effect.none
+      }
     }
-
   }
 
   override def eventHandler(state: State, event: Event): State = {
-      State(event :: state.history)
+    State(event :: state.history)
   }
 
+  def isBalance[T <: Balance](event: Event):Option[T] = event match {
+    case Requested(balance) => balance match {
+      case a:T => Some(a)
+      case _ => None
+    }
+    case _ => None
+  }
 }
 

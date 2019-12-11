@@ -6,6 +6,8 @@ import akka.persistence.multidc.{PersistenceMultiDcSettings, SpeculativeReplicat
 import akka.persistence.multidc.scaladsl.ReplicatedEntity
 import sample.model.PaymentLifecycle.{Command, Event, State}
 
+import scala.reflect.ClassTag
+
 object PaymentLifecycleTracking {
 
   val shardingName = "PaymentLifecycleTracking"
@@ -65,7 +67,7 @@ class PaymentLifecycleTracking
     State(event :: state.history)
   }
 
-  def isBalance[T <: Balance](event: Event):Option[T] = event match {
+  def isBalance[T <: Balance](event: Event)(implicit tag: ClassTag[T]):Option[T] = event match {
     case Requested(balance) => balance match {
       case a:T => Some(a)
       case _ => None

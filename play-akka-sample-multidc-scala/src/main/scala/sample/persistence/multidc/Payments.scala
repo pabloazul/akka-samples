@@ -1,64 +1,64 @@
 package payments.model
 
-  type IdempotentIdentifier = String
+  object Model {
+    type IdempotentIdentifier = String
 
-  sealed trait Correlated {
-    def id: IdempotentIdentifier
+    sealed trait Correlated {
+      def id: IdempotentIdentifier
+    }
+
+    sealed trait Command extends Correlated {
+      def amount: BigDecimal
+    }
+
+    case class Authorize  (id: IdempotentIdentifier, amount: BigDecimal) extends Command
+    case class Settle     (id: IdempotentIdentifier, amount: BigDecimal) extends Command
+    case class Refund     (id: IdempotentIdentifier, amount: BigDecimal) extends Command
+    case class Chargeback (id: IdempotentIdentifier, amount: BigDecimal) extends Command
+
+    sealed trait Balance extends Correlated {
+      def amount: BigDecimal
+    }
+
+    case class Authorization (id: IdempotentIdentifier, amount: BigDecimal) extends Balance
+    case class Settlement    (id: IdempotentIdentifier, amount: BigDecimal) extends Balance
+    case class Refunded      (id: IdempotentIdentifier, amount: BigDecimal) extends Balance
+    case class Chargedback   (id: IdempotentIdentifier, amount: BigDecimal) extends Balance
+
+
+    sealed trait Event[T <: Correlated]
+    sealed trait FailedEvent[T] extends Event[T]
+    sealed trait SuccessfulEvent[T <: Balance] extends Event[T] {
+        def balance: T
+    }
+
+    sealed trait RaceConditionEvent[T] extends Event[T]
+
+    case class State(history: List[Event[_]])
+
+
+    sealed trait Requested[T]  extends Event[T]           { def amount: BigDecimal }
+    sealed trait Successful[T] extends SuccessfulEvent[T] { def balance: T }
+    sealed trait Failed[T]     extends FailedEvent[T]     { def message: String}
+    sealed trait Timedout[T]   extends FailedEvent[T]
+
+    case class AuthorizationRequested (id: IdempotentIdentifier, amount: BigDecimal) extends Requested[Authorize]
+    case class AuthorizationSuccessful(id: IdempotentIdentifier, balance: Authorization) extends Successful[Authorization]
+    case class AuthorizationFailed    (id: IdempotentIdentifier, message: String) extends Failed[Authorize]
+    case class AuthorizationTimedout  (id: IdempotentIdentifier, message: String) extends Timedout[Authorize]
+
+    case class SettlementRequested (id: IdempotentIdentifier, amount: BigDecimal) extends Requested[Settle]
+    case class SettlementSuccessful(id: IdempotentIdentifier, balance: Settlement) extends Successful[Settlement]
+    case class SettlementFailed    (id: IdempotentIdentifier, message: String) extends Failed[Settle]
+    case class SettlementTimeout   (id: IdempotentIdentifier, message: String) extends Timedout[Settle]
+
+    case class RefundRequested (id: IdempotentIdentifier, amount: BigDecimal) extends Requested[Refund]
+    case class RefundSuccessful(id: IdempotentIdentifier, balance: Refunded) extends Successful[Refunded]
+    case class RefundFailed    (id: IdempotentIdentifier, message: String) extends Failed[Refund]
+    case class RefundTimeout   (id: IdempotentIdentifier, message: String) extends Timedout[Refund]
+
+    case class ChargebackRequested (id: IdempotentIdentifier, amount: BigDecimal) extends Requested[Chargeback]
+    case class ChargebackSuccessful(id: IdempotentIdentifier, balance: Chargedback) extends Successful[Chargedback]
+    case class ChargebackFailed    (id: IdempotentIdentifier, message: String) extends Failed[Chargeback]
+    case class ChargebackTimeout   (id: IdempotentIdentifier, message: String) extends Timedout[Chargeback]
   }
-
-  sealed trait Command extends Correlated {
-    def amount: BigDecimal
-  }
-
-  case class Authorize  (id: IdempotentIdentifier, amount: BigDecimal) extends Command
-  case class Settle     (id: IdempotentIdentifier, amount: BigDecimal) extends Command
-  case class Refund     (id: IdempotentIdentifier, amount: BigDecimal) extends Command
-  case class Chargeback (id: IdempotentIdentifier, amount: BigDecimal) extends Command
-
-  sealed trait Balance extends Correlated {
-    def amount: BigDecimal
-  }
-
-  case class Authorization (id: IdempotentIdentifier, amount: BigDecimal) extends Balance
-  case class Settlement    (id: IdempotentIdentifier, amount: BigDecimal) extends Balance
-  case class Refund        (id: IdempotentIdentifier, amount: BigDecimal) extends Balance
-  case class Chargeback    (id: IdempotentIdentifier, amount: BigDecimal) extends Balance
-
-
-  sealed trait Event extends Correlated
-  sealed trait FailedEvent extends Event
-  sealed trait SuccessfulEvent extends Event {
-    def balance:Balance
-  }
-  sealed trait RaceConditionEvent extends Event
-
-  case class State(history:List[Event])
-
-
-  case class AuthorizationRequested (id: IdempotentIdentifier, amount: BigDecimal) extends Event
-  case class AuthorizationSuccessful(id: IdempotentIdentifier, authorization: Authorization) extends SuccessfulEvent {
-    val balance:Balance = authorization
-  }
-  case class AuthorizationFailed    (id: IdempotentIdentifier, message: String) extends FailedEvent
-  case class AuthorizationTimeout   (id: IdempotentIdentifier, message: String) extends FailedEvent
-
-  case class SettlementRequested (id: IdempotentIdentifier, amount: BigDecimal) extends Event
-  case class SettlementSuccessful(id: IdempotentIdentifier, settlement: Settlement)  extends SuccessfulEvent {
-    val balance:Balance = settlement
-  }
-  case class SettlementFailed    (id: IdempotentIdentifier, message: String) extends FailedEvent
-  case class SettlementTimeout   (id: IdempotentIdentifier, message: String) extends FailedEvent
-
-  case class RefundRequested (id: IdempotentIdentifier, amount: BigDecimal) extends Event
-  case class RefundSuccessful(id: IdempotentIdentifier, refund: Refund)  extends SuccessfulEvent {
-    val balance:Balance = refund
-  }
-  case class RefundFailed    (id: IdempotentIdentifier, message: String) extends FailedEvent
-  case class RefundTimeout   (id: IdempotentIdentifier, message: String) extends FailedEvent
-
-  case class ChargebackRequested (id: IdempotentIdentifier, amount: BigDecimal) extends Event
-  case class ChargebackSuccessful(id: IdempotentIdentifier, chargeback: Chargeback)  extends SuccessfulEvent {
-    val balance:Balance = chargeback
-  }
-  case class ChargebackFailed    (id: IdempotentIdentifier, message: String) extends FailedEvent
-  case class ChargebackTimeout   (id: IdempotentIdentifier, message: String) extends FailedEvent

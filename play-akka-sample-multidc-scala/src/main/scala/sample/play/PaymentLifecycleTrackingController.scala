@@ -1,11 +1,10 @@
 package sample.play
 
-import akka.actor.Scheduler
+import akka.actor.typed.{ActorRef, Scheduler}
 import akka.util.Timeout
 import javax.inject.{Inject, Singleton}
-
 import play.api.mvc._
-import sample.model.PaymentLifecycle.{Authorize, Settle, Refund, Chargeback }
+import sample.model.PaymentLifecycle.{Authorize, Chargeback, Command, Refund, Settle}
 import sample.model.PaymentLifecycleJson._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -13,7 +12,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class PaymentLifecycleTrackingController @Inject()(
     cc: ControllerComponents,
-    val lifecycleTrackerShardRegion: akka.actor.ActorRef
+    val lifecycleTrackerShardRegion: ActorRef[Command]
 )(implicit timeout: Timeout, scheduler: Scheduler, ec: ExecutionContext)
     extends AbstractController(cc) {
 

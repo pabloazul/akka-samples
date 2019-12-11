@@ -3,7 +3,7 @@ package sample.model
 object PaymentLifecycle {
     type IdempotentIdentifier = String
 
-    sealed trait Correlated { def id: IdempotentIdentifier }
+    trait Correlated { def id: IdempotentIdentifier }
 
     sealed trait Command extends Correlated
 

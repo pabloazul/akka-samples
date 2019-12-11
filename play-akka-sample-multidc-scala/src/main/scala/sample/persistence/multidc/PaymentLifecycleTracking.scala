@@ -38,7 +38,7 @@ object PaymentLifecycleTracking {
 }
 
 class PaymentLifecycleTracking
-  extends ReplicatedEntity[Command, Event[Correlated], State] {
+  extends ReplicatedEntity[Command, Event, State] {
 
   import sample.model.PaymentLifecycle._
 
@@ -46,15 +46,16 @@ class PaymentLifecycleTracking
 
   override def commandHandler: CommandHandler = CommandHandler { (ctx, state, command) =>
     command match {
-            case c:Command  =>
-              Effect.none
+            case authorize:Authorize   => Effect.persist(AuthorizationRequested(authorize))
+            case settle:Settle         => Effect.persist(SettlementRequested(settle))
+            case refund:Refund         => Effect.persist(RefundRequested(refund))
+            case chargeback:Chargeback => Effect.persist(ChargebackRequested(chargeback))
     }
+
   }
 
-  override def eventHandler(state: State, event: Event[Correlated]): State = {
-      event match {
-        case _ => state
-    }
+  override def eventHandler(state: State, event: Event): State = {
+      State(event :: state.history)
   }
 
 }

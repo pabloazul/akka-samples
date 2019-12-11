@@ -27,20 +27,20 @@ package payments.model
 
 
     sealed trait Event[T <: Correlated]
-    sealed trait FailedEvent[T] extends Event[T]
+    sealed trait FailedEvent[T <: Command] extends Event[T]
     sealed trait SuccessfulEvent[T <: Balance] extends Event[T] {
         def balance: T
     }
 
-    sealed trait RaceConditionEvent[T] extends Event[T]
+    sealed trait RaceConditionEvent[T <: Correlated] extends Event[T]
 
-    case class State(history: List[Event[_]])
+    case class State(history: List[Event[Correlated]])
 
 
-    sealed trait Requested[T]  extends Event[T]           { def amount: BigDecimal }
-    sealed trait Successful[T] extends SuccessfulEvent[T] { def balance: T }
-    sealed trait Failed[T]     extends FailedEvent[T]     { def message: String}
-    sealed trait Timedout[T]   extends FailedEvent[T]
+    sealed trait Requested[T <: Command]  extends Event[T]           { def amount: BigDecimal }
+    sealed trait Successful[T <: Balance] extends SuccessfulEvent[T] { def balance: T }
+    sealed trait Failed[T <: Command]     extends FailedEvent[T]     { def message: String}
+    sealed trait Timedout[T <: Command]   extends FailedEvent[T]
 
     case class AuthorizationRequested (id: IdempotentIdentifier, amount: BigDecimal) extends Requested[Authorize]
     case class AuthorizationSuccessful(id: IdempotentIdentifier, balance: Authorization) extends Successful[Authorization]

@@ -1,11 +1,13 @@
 organization := "com.typesafe.akka.samples"
 name := "play-akka-sample-multidc-scala"
 
-enablePlugins(ProtobufPlugin)
+enablePlugins(PlayScala,ProtobufPlugin)
+disablePlugins(PlayLayoutPlugin)
+
 
 scalaVersion := "2.13.1"
 
-val AkkaVersion = "2.6.0"
+val AkkaVersion = "2.6.1"
 val AkkaAddOnsVersion = "1.1.12"
 val AkkaPersistenceCassandraVersion = "0.100"
 val AkkaHttpVersion = "10.1.10"
@@ -30,7 +32,8 @@ libraryDependencies ++= Seq(
   "com.lightbend.akka.management" %% "akka-management" % AkkaClusterManagementVersion,
   "com.lightbend.akka.management" %% "akka-management-cluster-http" % AkkaClusterManagementVersion,
   "com.typesafe.akka" %% "akka-persistence-cassandra-launcher" % AkkaPersistenceCassandraVersion % "test",
-  "org.scalatest" %% "scalatest" % "3.0.8" % "test"
+  "org.scalatest" %% "scalatest" % "3.0.8" % "test",
+  guice
 )
 
 // transitive dependency of akka 2.5x that is brought in by addons but evicted

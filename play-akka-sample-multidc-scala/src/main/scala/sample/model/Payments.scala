@@ -1,6 +1,6 @@
-package payments.model
+package sample.model
 
-  object Model {
+  object PaymentLifecycle {
     type IdempotentIdentifier = String
 
     sealed trait Correlated {

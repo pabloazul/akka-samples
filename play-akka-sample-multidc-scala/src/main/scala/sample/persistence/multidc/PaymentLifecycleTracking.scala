@@ -1,15 +1,15 @@
-package payments.persistence.multidc
+package sample.persistence.multidc
 
 import akka.actor.ActorSystem
 import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings, ShardRegion}
 import akka.persistence.multidc.{PersistenceMultiDcSettings, SpeculativeReplicatedEvent}
 import akka.persistence.multidc.scaladsl.ReplicatedEntity
-import payments.model.Model.{Command, Correlated, Event, State}
+import sample.model.PaymentLifecycle.{Command, Correlated, Event, State}
 
 
-object PaymentTracking {
+object PaymentLifecycleTracking {
 
-  val shardingName = "PaymentTracking"
+  val shardingName = "PaymentLifecycleTracking"
   val maxNumberOfShards = 11
 
   def shardId(entityId: String): String =
@@ -28,7 +28,7 @@ object PaymentTracking {
 
   def props(system:ActorSystem) = ReplicatedEntity.clusterShardingProps(
     entityTypeName = shardingName,
-    entityFactory = () => new PaymentTracking,
+    entityFactory = () => new PaymentLifecycleTracking,
     settings = PersistenceMultiDcSettings(system))
 
   def region(system:ActorSystem) =
@@ -37,10 +37,10 @@ object PaymentTracking {
 
 }
 
-class PaymentTracking
+class PaymentLifecycleTracking
   extends ReplicatedEntity[Command, Event[Correlated], State] {
 
-  import payments.model.Model._
+  import sample.model.PaymentLifecycle._
 
   override def initialState: State = State(List.empty)
 

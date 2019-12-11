@@ -19,4 +19,12 @@ class PaymentLifecycleSerializer(val system: akka.actor.ExtendedActorSystem)
     case _ ⇒
       throw new IllegalArgumentException(s"Cannot serialize object of type [${o.getClass.getName}]")
   }
+  override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = manifest match {
+
+    case _ ⇒
+      throw new NotSerializableException(
+        s"Unimplemented deserialization of message with manifest [$manifest] in [${getClass.getName}]")
+  }
+
+}
 

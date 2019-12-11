@@ -1,7 +1,5 @@
 package sample.model
 
-import play.api.libs.json.Json
-
 object PaymentLifecycle {
     type IdempotentIdentifier = String
 

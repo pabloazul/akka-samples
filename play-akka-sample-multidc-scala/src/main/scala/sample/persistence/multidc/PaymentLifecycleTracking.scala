@@ -30,10 +30,7 @@ object PaymentLifecycleTracking {
     entityTypeName = shardingName,
     entityFactory = () => new PaymentLifecycleTracking,
     settings = PersistenceMultiDcSettings(system))
-
-  def region(system:ActorSystem) =
-    ClusterSharding(system).start(shardingName, props(system), ClusterShardingSettings(system),
-      extractEntityId, extractShardId)
+  
 }
 
 class PaymentLifecycleTracking

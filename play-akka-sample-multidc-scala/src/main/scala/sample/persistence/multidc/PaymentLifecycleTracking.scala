@@ -45,19 +45,21 @@ class PaymentLifecycleTracking
 
   override def commandHandler: CommandHandler = CommandHandler { (ctx, state, command) =>
     command match {
-      case setBalanceCommand: SetBalance => Effect.persist(Requested(setBalanceCommand))
+      case setBalanceCommand: SetBalance =>
+        // Send authorization over TCP
+        Effect.persist(Requested(setBalanceCommand))
       case getBalanceCommand: GetBalance => getBalanceCommand match {
         case g:GetAuthorizationBalance =>
-          val balance = state.history.flatMap(isBalance[Authorization](_))
+          val balance = state.history.filter(isBalance[Authorization](_))
           Effect.none
         case g:GetSettledBalance =>
-          val balance = state.history.flatMap(isBalance[Settlement](_))
+          val balance = state.history.filter(isBalance[Settlement](_))
           Effect.none
         case g:GetRefundedBalance =>
-          val balance = state.history.flatMap(isBalance[Refunded](_))
+          val balance = state.history.filter(isBalance[Refunded](_))
           Effect.none
         case g:GetChargebackBalance =>
-          val balance = state.history.flatMap(isBalance[Chargedback](_))
+          val balance = state.history.filter(isBalance[Chargedback](_))
           Effect.none
       }
     }
@@ -67,12 +69,12 @@ class PaymentLifecycleTracking
     State(event :: state.history)
   }
 
-  def isBalance[T <: Balance](event: Event)(implicit tag: ClassTag[T]):Option[T] = event match {
+  def isBalance[T <: Balance](event: Event)(implicit tag: ClassTag[T]):Boolean = event match {
     case Requested(balance) => balance match {
-      case a:T => Some(a)
-      case _ => None
+      case a:T => true
+      case _ => false
     }
-    case _ => None
+    case _ => false
   }
 }
 

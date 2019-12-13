@@ -1,7 +1,7 @@
 package sample.persistence.multidc
 
 import akka.actor.ActorSystem
-import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings, ShardRegion}
+import akka.cluster.sharding.ShardRegion
 import akka.persistence.multidc.{PersistenceMultiDcSettings, SpeculativeReplicatedEvent}
 import akka.persistence.multidc.scaladsl.ReplicatedEntity
 import sample.model.PaymentLifecycle.{Command, Event, State}
@@ -30,7 +30,7 @@ object PaymentLifecycleTracking {
     entityTypeName = shardingName,
     entityFactory = () => new PaymentLifecycleTracking,
     settings = PersistenceMultiDcSettings(system))
-  
+
 }
 
 class PaymentLifecycleTracking

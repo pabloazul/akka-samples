@@ -44,10 +44,12 @@ class PaymentLifecycleTracking
     command match {
       case setBalanceCommand: SetBalance =>
         // Send authorization over TCP
+        // TODO : Add side effect to simulate sending at-most-once-command to downstream card network/aquirer
         Effect.persist(Requested(setBalanceCommand))
       case getBalanceCommand: GetBalance => getBalanceCommand match {
         case g:GetAuthorizationBalance =>
           val balance = state.history.filter(isBalance[Authorization](_))
+          // TODO : update protocol to typed and return balance to sender
           Effect.none
         case g:GetSettledBalance =>
           val balance = state.history.filter(isBalance[Settlement](_))

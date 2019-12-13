@@ -21,7 +21,7 @@ class PaymentLifecycleTrackingController @Inject()(
       request.body.asJson
         .flatMap(_.validate[Authorize].asOpt.map { cmd  =>
 
-          lifecycleTrackerShardRegion ! cmd // Consider ask and mapping the result.
+          lifecycleTrackerShardRegion ! cmd // TODO use ask and map the result.
 
           Future.successful(Accepted)
         })
@@ -65,5 +65,6 @@ class PaymentLifecycleTrackingController @Inject()(
     }
   }
 
+  // TODO : add getBalance for each balance type
 }
 

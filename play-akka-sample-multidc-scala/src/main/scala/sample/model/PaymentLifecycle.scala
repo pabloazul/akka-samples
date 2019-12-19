@@ -11,9 +11,9 @@ object PaymentLifecycle {
 
     sealed trait SetBalance extends Command { def amount: BigDecimal }
     case class Authorize  (id: IdempotentIdentifier, amount: BigDecimal, replyTo: ActorRef[SetBalanceResponse]) extends SetBalance
-    case class Settle     (id: IdempotentIdentifier, amount: BigDecimal) extends SetBalance
-    case class Refund     (id: IdempotentIdentifier, amount: BigDecimal) extends SetBalance
-    case class Chargeback (id: IdempotentIdentifier, amount: BigDecimal) extends SetBalance
+    case class Settle     (id: IdempotentIdentifier, amount: BigDecimal, replyTo: ActorRef[SetBalanceResponse]) extends SetBalance
+    case class Refund     (id: IdempotentIdentifier, amount: BigDecimal, replyTo: ActorRef[SetBalanceResponse]) extends SetBalance
+    case class Chargeback (id: IdempotentIdentifier, amount: BigDecimal, replyTo: ActorRef[SetBalanceResponse]) extends SetBalance
 
     sealed trait BalanceStatus
     case object ReceivedSuccessfully extends BalanceStatus

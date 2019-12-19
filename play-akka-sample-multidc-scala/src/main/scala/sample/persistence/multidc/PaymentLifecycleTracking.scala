@@ -14,7 +14,7 @@ object PaymentLifecycleTracking {
   val maxNumberOfShards = 11
 
   def shardId(entityId: String): String =
-    (math.abs(entityId.hashCode % maxNumberOfShards)).toString
+    math.abs(entityId.hashCode % maxNumberOfShards).toString
 
   val extractEntityId: ShardRegion.ExtractEntityId = {
     case cmd: Command => (cmd.id, cmd)

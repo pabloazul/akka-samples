@@ -44,12 +44,12 @@ class PaymentLifecycleTracking
     command match {
 
       case setBalanceCommand: SetBalance =>
-        // Send authorization over TCP
-        // TODO : Add side effect to simulate sending at-most-once-command to downstream card network/aquirer
         Effect.persist(Requested(setBalanceCommand)).andThen { _ =>
             setBalanceCommand match {
               case a: Authorize =>
+                // TODO : Add side effect to simulate sending at-most-once-command to downstream card network/aquirer
                 println(s"Authorizing: $a")
+                a.replyTo.tell(SetBalanceResponse(a.id,a.amount,ReceivedSuccessfully))
               case c: Chargeback =>
                 println(s"Processing chargeback: $c")
               case s: Settle =>

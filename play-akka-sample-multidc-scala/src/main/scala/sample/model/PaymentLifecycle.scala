@@ -47,19 +47,19 @@ object PaymentLifecycle {
     case class Successful(balance: Balance)   extends Event { val id : IdempotentIdentifier = balance.id }
 
     sealed trait Failed                   extends Event { def message: String}
-    sealed trait Timedout                 extends Failed
+    sealed trait Timeout                 extends Failed
 
     case class AuthorizationFailed    (id: IdempotentIdentifier, message: String) extends Failed
-    case class AuthorizationTimedout  (id: IdempotentIdentifier, message: String) extends Timedout
+    case class AuthorizationTimeout(id: IdempotentIdentifier, message: String) extends Timeout
 
     case class SettlementFailed    (id: IdempotentIdentifier, message: String) extends Failed
-    case class SettlementTimeout   (id: IdempotentIdentifier, message: String) extends Timedout
+    case class SettlementTimeout   (id: IdempotentIdentifier, message: String) extends Timeout
 
     case class RefundFailed    (id: IdempotentIdentifier, message: String) extends Failed
-    case class RefundTimeout   (id: IdempotentIdentifier, message: String) extends Timedout
+    case class RefundTimeout   (id: IdempotentIdentifier, message: String) extends Timeout
 
 
     case class ChargebackFailed    (id: IdempotentIdentifier, message: String) extends Failed
-    case class ChargebackTimeout   (id: IdempotentIdentifier, message: String) extends Timedout
+    case class ChargebackTimeout   (id: IdempotentIdentifier, message: String) extends Timeout
 
 }

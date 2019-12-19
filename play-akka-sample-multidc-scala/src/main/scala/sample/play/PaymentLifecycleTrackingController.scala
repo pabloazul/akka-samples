@@ -32,7 +32,7 @@ class PaymentLifecycleTrackingController @Inject()(
           // TODO: is this a sensible Play future pattern?
          authResult.map { r =>
            r.status match {
-             case ReceivedSuccessfully => Ok(Accepted.toString())
+             case ReceivedSuccessfully => Ok(Accepted.toString()) // TODO: Json format?
              case error: BalanceCommandError => BadRequest(error.message)
            }
          }

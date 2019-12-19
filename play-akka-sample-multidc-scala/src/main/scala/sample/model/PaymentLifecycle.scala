@@ -1,5 +1,9 @@
 package sample.model
 
+import akka.actor.ActorRef
+
+import scala.reflect.ClassTag
+
 object PaymentLifecycle {
     type IdempotentIdentifier = String
 
@@ -13,11 +17,14 @@ object PaymentLifecycle {
     case class Refund     (id: IdempotentIdentifier, amount: BigDecimal) extends SetBalance
     case class Chargeback (id: IdempotentIdentifier, amount: BigDecimal) extends SetBalance
 
+    // TODO: ActorRef[BalanceResponse]
     sealed trait GetBalance extends Command
-    case class GetAuthorizationBalance(id: IdempotentIdentifier) extends GetBalance
-    case class GetSettledBalance      (id: IdempotentIdentifier) extends GetBalance
-    case class GetRefundedBalance     (id: IdempotentIdentifier) extends GetBalance
-    case class GetChargebackBalance   (id: IdempotentIdentifier) extends GetBalance
+    case class GetAuthorizationBalance(id: IdempotentIdentifier, replyTo: ActorRef) extends GetBalance
+    case class GetSettledBalance      (id: IdempotentIdentifier, replyTo: ActorRef) extends GetBalance
+    case class GetRefundedBalance     (id: IdempotentIdentifier, replyTo: ActorRef) extends GetBalance
+    case class GetChargebackBalance   (id: IdempotentIdentifier, replyTo: ActorRef) extends GetBalance
+
+    case class BalanceResponse(balanceEvents: List[Event])
 
     sealed trait Balance extends Correlated { def amount: BigDecimal }
 

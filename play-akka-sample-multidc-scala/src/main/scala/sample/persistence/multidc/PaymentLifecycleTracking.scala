@@ -42,23 +42,39 @@ class PaymentLifecycleTracking
 
   override def commandHandler: CommandHandler = CommandHandler { (ctx, state, command) =>
     command match {
+
       case setBalanceCommand: SetBalance =>
         // Send authorization over TCP
         // TODO : Add side effect to simulate sending at-most-once-command to downstream card network/aquirer
-        Effect.persist(Requested(setBalanceCommand))
+        Effect.persist(Requested(setBalanceCommand)).andThen { _ =>
+            setBalanceCommand match {
+              case a: Authorize =>
+                println(s"Authorizing: $a")
+              case c: Chargeback =>
+                println(s"Processing chargeback: $c")
+              case s: Settle =>
+                println(s"Processing settlement: $s")
+              case r: Refund =>
+                println(s"Processing refund: $r")
+            }
+        }
+
       case getBalanceCommand: GetBalance => getBalanceCommand match {
         case g:GetAuthorizationBalance =>
           val balance = state.history.filter(isBalance[Authorization](_))
-          // TODO : update protocol to typed and return balance to sender
+          g.replyTo ! BalanceResponse(balance)
           Effect.none
         case g:GetSettledBalance =>
           val balance = state.history.filter(isBalance[Settlement](_))
+          g.replyTo ! BalanceResponse(balance)
           Effect.none
         case g:GetRefundedBalance =>
           val balance = state.history.filter(isBalance[Refunded](_))
+          g.replyTo ! BalanceResponse(balance)
           Effect.none
         case g:GetChargebackBalance =>
           val balance = state.history.filter(isBalance[Chargedback](_))
+          g.replyTo ! BalanceResponse(balance)
           Effect.none
       }
     }
@@ -69,10 +85,12 @@ class PaymentLifecycleTracking
   }
 
   def isBalance[T <: Balance](event: Event)(implicit tag: ClassTag[T]):Boolean = event match {
-    case Requested(balance) => balance match {
-      case a:T => true
+    // TODO: is this Requested or Successful?
+    case Successful(balance) => balance match {
+      case _ : T => true
       case _ => false
     }
     case _ => false
   }
+
 }

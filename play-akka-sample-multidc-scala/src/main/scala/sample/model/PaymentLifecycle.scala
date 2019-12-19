@@ -1,8 +1,6 @@
 package sample.model
 
-import akka.actor.ActorRef
-
-import scala.reflect.ClassTag
+import akka.actor.typed.ActorRef
 
 object PaymentLifecycle {
     type IdempotentIdentifier = String
@@ -12,17 +10,22 @@ object PaymentLifecycle {
     sealed trait Command extends Correlated
 
     sealed trait SetBalance extends Command { def amount: BigDecimal }
-    case class Authorize  (id: IdempotentIdentifier, amount: BigDecimal) extends SetBalance
+    case class Authorize  (id: IdempotentIdentifier, amount: BigDecimal, replyTo: ActorRef[SetBalanceResponse]) extends SetBalance
     case class Settle     (id: IdempotentIdentifier, amount: BigDecimal) extends SetBalance
     case class Refund     (id: IdempotentIdentifier, amount: BigDecimal) extends SetBalance
     case class Chargeback (id: IdempotentIdentifier, amount: BigDecimal) extends SetBalance
 
-    // TODO: ActorRef[BalanceResponse]
+    sealed trait BalanceStatus
+    case object ReceivedSuccessfully extends BalanceStatus
+    case class BalanceCommandError(message: String) extends BalanceStatus
+
+    case class SetBalanceResponse(id: IdempotentIdentifier, amount: BigDecimal, status: BalanceStatus)
+
     sealed trait GetBalance extends Command
-    case class GetAuthorizationBalance(id: IdempotentIdentifier, replyTo: ActorRef) extends GetBalance
-    case class GetSettledBalance      (id: IdempotentIdentifier, replyTo: ActorRef) extends GetBalance
-    case class GetRefundedBalance     (id: IdempotentIdentifier, replyTo: ActorRef) extends GetBalance
-    case class GetChargebackBalance   (id: IdempotentIdentifier, replyTo: ActorRef) extends GetBalance
+    case class GetAuthorizationBalance(id: IdempotentIdentifier, replyTo: ActorRef[BalanceResponse]) extends GetBalance
+    case class GetSettledBalance      (id: IdempotentIdentifier, replyTo: ActorRef[BalanceResponse]) extends GetBalance
+    case class GetRefundedBalance     (id: IdempotentIdentifier, replyTo: ActorRef[BalanceResponse]) extends GetBalance
+    case class GetChargebackBalance   (id: IdempotentIdentifier, replyTo: ActorRef[BalanceResponse]) extends GetBalance
 
     case class BalanceResponse(balanceEvents: List[Event])
 
@@ -40,8 +43,8 @@ object PaymentLifecycle {
 
     case class State(history: List[Event])
 
-    case class Requested(command: SetBalance) extends Event { val id = command.id }
-    case class Successful(balance: Balance)   extends Event { val id = balance.id }
+    case class Requested(command: SetBalance) extends Event { val id : IdempotentIdentifier = command.id }
+    case class Successful(balance: Balance)   extends Event { val id : IdempotentIdentifier = balance.id }
 
     sealed trait Failed                   extends Event { def message: String}
     sealed trait Timedout                 extends Failed

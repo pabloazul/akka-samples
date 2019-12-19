@@ -1,11 +1,13 @@
 package sample.play
 
+import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.{ActorRef, Scheduler}
 import akka.util.Timeout
 import javax.inject.{Inject, Singleton}
 import play.api.mvc._
-import sample.model.PaymentLifecycle.{Authorize, Chargeback, Command, Refund, Settle}
+import sample.model.PaymentLifecycle._
 import sample.model.PaymentLifecycleJson._
+import sample.play.GatewayInterface.AuthorizeRequest
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -19,15 +21,27 @@ class PaymentLifecycleTrackingController @Inject()(
   def authorize(): Action[AnyContent] = Action.async { implicit request =>
     {
       request.body.asJson
-        .flatMap(_.validate[Authorize].asOpt.map { cmd  =>
+        .flatMap(_.validate[AuthorizeRequest].asOpt.map { cmd  =>
 
-          lifecycleTrackerShardRegion ! cmd // TODO use ask and map the result.
+          //lifecycleTrackerShardRegion ! cmd // TODO use ask and map the result.
 
-          Future.successful(Accepted)
+          val authResult : Future[SetBalanceResponse] = lifecycleTrackerShardRegion.ask[SetBalanceResponse]({ ref =>
+              Authorize(cmd.id, cmd.amount, ref)
+          }).mapTo[SetBalanceResponse]
+
+          // TODO: is this a sensible Play future pattern?
+         authResult.map { r =>
+           r.status match {
+             case ReceivedSuccessfully => Ok(Accepted.toString())
+             case error: BalanceCommandError => BadRequest(error.message)
+           }
+         }
+
         })
         .getOrElse(Future.successful(BadRequest))
     }
   }
+
   def settle(): Action[AnyContent] = Action.async { implicit request =>
     {
     request.body.asJson

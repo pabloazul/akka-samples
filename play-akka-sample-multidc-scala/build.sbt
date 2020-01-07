@@ -1,9 +1,8 @@
 organization := "com.typesafe.akka.samples"
 name := "play-akka-sample-multidc-scala"
 
-enablePlugins(PlayScala,ProtobufPlugin)
+enablePlugins(PlayScala)
 disablePlugins(PlayLayoutPlugin)
-
 
 scalaVersion := "2.13.1"
 

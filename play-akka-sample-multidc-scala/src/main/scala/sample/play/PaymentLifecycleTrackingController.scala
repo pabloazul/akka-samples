@@ -5,17 +5,20 @@ import akka.actor.typed.{ActorRef, Scheduler}
 import akka.util.Timeout
 import javax.inject.{Inject, Singleton}
 import play.api.mvc._
-import sample.model.PaymentLifecycle._
+import sample.model.PaymentLifecycle
 import sample.play.GatewayInterface.{AuthorizeRequest, _}
 
+import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class PaymentLifecycleTrackingController @Inject()(
-    cc: ControllerComponents,
-    val lifecycleTrackerShardRegion: ActorRef[Command]
-)(implicit timeout: Timeout, scheduler: Scheduler, ec: ExecutionContext)
-    extends AbstractController(cc) {
+    val controllerComponents: ControllerComponents,
+    val lifecycleTrackerShardRegion: ActorRef[PaymentLifecycle.Command]
+)(implicit scheduler: Scheduler, ec: ExecutionContext)
+    extends BaseController {
+
+  implicit val timeout = Timeout(10.seconds)
 
   def authorize(): Action[AnyContent] = Action.async { implicit request =>
     {
@@ -24,15 +27,15 @@ class PaymentLifecycleTrackingController @Inject()(
 
           //lifecycleTrackerShardRegion ! cmd // TODO use ask and map the result.
 
-          val authResult : Future[SetBalanceResponse] = lifecycleTrackerShardRegion.ask[SetBalanceResponse]({ ref =>
-              Authorize(cmd.id, cmd.amount, ref)
-          }).mapTo[SetBalanceResponse]
+          val authResult : Future[PaymentLifecycle.SetBalanceResponse] = lifecycleTrackerShardRegion.ask[PaymentLifecycle.SetBalanceResponse]({ ref =>
+            PaymentLifecycle.Authorize(cmd.id, cmd.amount, ref)
+          }).mapTo[PaymentLifecycle.SetBalanceResponse]
 
           // TODO: is this a sensible Play future pattern?
          authResult.map { r =>
            r.status match {
-             case ReceivedSuccessfully => Ok(Accepted.toString()) // TODO: Json format?
-             case error: BalanceCommandError => BadRequest(error.message)
+             case PaymentLifecycle.ReceivedSuccessfully => Ok(Accepted.toString()) // TODO: Json format?
+             case error: PaymentLifecycle.BalanceCommandError => BadRequest(error.message)
            }
          }
 

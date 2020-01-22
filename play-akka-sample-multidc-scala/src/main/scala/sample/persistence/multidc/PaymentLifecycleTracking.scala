@@ -167,6 +167,9 @@ class PaymentLifecycleTracking
           case _ => None // left as an exercise to handle other cases
         }
 
+      case Declined =>
+        Some("No operations possible for declined transactions")
+
       case _ => None
       // TODO: Left as an exercise to add other business rules for different states and commands
     }

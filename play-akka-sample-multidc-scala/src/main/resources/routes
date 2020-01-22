@@ -1,1 +1,9 @@
 POST     /authorize                       sample.play.PaymentLifecycleTrackingController.authorize
+POST     /authorization_balance           sample.play.PaymentLifecycleTrackingController.authorizationBalance
+POST     /settle                          sample.play.PaymentLifecycleTrackingController.settle
+POST     /settle_balance                  sample.play.PaymentLifecycleTrackingController.settleBalance
+POST     /refund                          sample.play.PaymentLifecycleTrackingController.refund
+POST     /refund_balance                  sample.play.PaymentLifecycleTrackingController.refundBalance
+POST     /chargeback                      sample.play.PaymentLifecycleTrackingController.chargeback
+POST     /chargeback_balance              sample.play.PaymentLifecycleTrackingController.chargebackBalance
+POST     /transaction_state               sample.play.PaymentLifecycleTrackingController.transactionState

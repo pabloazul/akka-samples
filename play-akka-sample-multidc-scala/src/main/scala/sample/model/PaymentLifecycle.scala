@@ -119,7 +119,8 @@ object PaymentLifecycle {
       new JsonSubTypes.Type(value = classOf[RefundFailed], name = "RefundFailed"),
       new JsonSubTypes.Type(value = classOf[RefundTimeout], name = "RefundTimeout"),
       new JsonSubTypes.Type(value = classOf[ChargebackFailed], name = "ChargebackFailed"),
-      new JsonSubTypes.Type(value = classOf[ChargebackTimeout], name = "ChargebackTimeout")
+      new JsonSubTypes.Type(value = classOf[ChargebackTimeout], name = "ChargebackTimeout"),
+      new JsonSubTypes.Type(value = classOf[Rejected], name = "Rejected")
     )
   )
   sealed trait Event extends Correlated with PaymentLifecycleSerializable
